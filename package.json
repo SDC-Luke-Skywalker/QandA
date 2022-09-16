@@ -8,7 +8,8 @@
     "database": "node database/index.js",
     "questions": "node database/generateQuestions.js",
     "answers": "node database/generateAnswers.js",
-    "answer-photos": "node database/generateAnswerPhotos.js"
+    "answer-photos": "node database/generateAnswerPhotos.js",
+    "server-dev": "node server/index.js"
   },
   "repository": {
     "type": "git",

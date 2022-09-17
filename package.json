@@ -9,7 +9,8 @@
     "questions": "node database/generateQuestions.js",
     "answers": "node database/generateAnswers.js",
     "answer-photos": "node database/generateAnswerPhotos.js",
-    "server-dev": "node server/index.js"
+    "server-dev": "node server/index.js",
+    "index-tables": "node database/indexTables.js"
   },
   "repository": {
     "type": "git",

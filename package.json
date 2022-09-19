@@ -10,7 +10,8 @@
     "answers": "node database/generateAnswers.js",
     "answer-photos": "node database/generateAnswerPhotos.js",
     "server-dev": "node server/index.js",
-    "index-tables": "node database/indexTables.js"
+    "index-tables": "node database/indexTables.js",
+    "load-test": "k6 run k6_tests/tests.js"
   },
   "repository": {
     "type": "git",

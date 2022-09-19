@@ -13,17 +13,14 @@ const pool = new Pool({
 module.exports = {
   getQuestions: (req, res) => (async () => {
     const { rows } = await pool.query(`SELECT questions.product_id, questions.question_id, questions.question_body, questions.question_date, questions.asker_name, questions.question_helpfulness, questions.reported, answers.answer_id AS id, answers.body, answers.date, answers.answerer_name, answers.helpfulness, answers.photos FROM questions LEFT OUTER JOIN answers ON questions.question_id = answers.question_id WHERE questions.product_id = ${req.query.product_id} ORDER BY questions.question_helpfulness DESC`)
-
-    // const { rows } = await pool.query(`SELECT (question_id) FROM questions WHERE product_id = ${req.query.product_id} ORDER BY question_helpfulness DESC`)
     let data = {product_id: req.query.product_id};
-    //define results as an array
     let results = [];
     let resultTracker = {};
     for (var row of rows) {
       if (resultTracker[row.question_id]) {
         let answer = row.id ? {} : null;
         if (answer) {
-          answer[row.id] = {
+          answer = {
             id: row.id,
             body: row.body,
             date: row.date,
@@ -31,21 +28,9 @@ module.exports = {
             helpfulness: row.helpfulness,
             photos: row.photos
           };
-          resultTracker[row.question_id].answers =
-          [...resultTracker[row.question_id].answers, answer]
+          resultTracker[row.question_id].answers[answer.id] = answer;
         }
       } else {
-        let answer = row.id ? {} : null;
-        if (answer) {
-          answer[row.id] = {
-            id: row.id,
-            body: row.body,
-            date: row.date,
-            answerer_name: row.answerer_name,
-            helpfulness: row.helpfulness,
-            photos: row.photos
-          };
-        }
         resultTracker[row.question_id] = {
           question_id: row.question_id,
           question_body: row.question_body,
@@ -53,7 +38,19 @@ module.exports = {
           asker_name: row.asker_name,
           question_helpfulness: row.question_helpfulness,
           reported: row.reported,
-          answers: answer ? [answer] : []
+          answers: {}
+        }
+        let answer = row.id ? {} : null;
+        if (answer) {
+          answer = {
+            id: row.id,
+            body: row.body,
+            date: row.date,
+            answerer_name: row.answerer_name,
+            helpfulness: row.helpfulness,
+            photos: row.photos
+          };
+          resultTracker[row.question_id].answers[answer.id] = answer;
         }
       }
     }
@@ -61,7 +58,9 @@ module.exports = {
     questions.forEach((question) => {
       results.push(question)
     });
-    data.results = results;
+    console.log(req.query.count);
+    let count = req.query.count || 5;
+    data.results = results.slice(0, count);
     res.status(200).send(data);
   })().catch(err => {
     console.log(err);
@@ -81,6 +80,7 @@ module.exports = {
 
   //---------POST---------
   addQuestion: (req, res) => (async () => {
+
     let date = new Date();
     let dd = String(date.getDate()).padStart(2, '0');
     let mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -108,13 +108,19 @@ module.exports = {
 
   //---------PUT QUESTIONS---------
   qHelpful: (req, res) => (async () => {
-    await pool.query(`UPDATE questions SET question_helpfulness = question_helpfulness + 1 WHERE question_id = ${req.query.question_id}`)
+    let path = req.path;
+    path = path.split('/');
+    let question_id = path[3];
+    await pool.query(`UPDATE questions SET question_helpfulness = question_helpfulness + 1 WHERE question_id = ${question_id}`)
     res.status(204).end();
   })().catch(err => {
     res.status(500).send(err);
   }),
   qReport: (req, res) => (async () => {
-    await pool.query(`UPDATE questions SET reported = NOT reported WHERE question_id = ${req.query.question_id}`)
+    let path = req.path;
+    path = path.split('/');
+    let question_id = path[3];
+    await pool.query(`UPDATE questions SET reported = NOT reported WHERE question_id = ${question_id}`)
     res.status(204).end()
   })().catch(err => {
     res.status(500).send(err);
@@ -122,13 +128,19 @@ module.exports = {
 
   //---------PUT ANSWERS---------
   aHelpful: (req, res) => (async () => {
-    await pool.query(`UPDATE answers SET helpfulness = helpfulness + 1 WHERE answer_id = ${req.query.answer_id}`)
+    let path = req.path;
+    path = path.split('/');
+    let answer_id = path[3];
+    await pool.query(`UPDATE answers SET helpfulness = helpfulness + 1 WHERE answer_id = ${answer_id}`)
     res.status(204).end();
   })().catch(err => {
     res.status(500).send(err);
   }),
   aReport: (req, res) => (async () => {
-    await pool.query(`UPDATE answers SET reported = NOT reported WHERE answer_id = ${req.query.answer_id}`)
+    let path = req.path;
+    path = path.split('/');
+    let answer_id = path[3];
+    await pool.query(`UPDATE answers SET reported = NOT reported WHERE answer_id = ${answer_id}`)
     res.status(204).end();
   })().catch(err => {
     res.status(500).send(err);
